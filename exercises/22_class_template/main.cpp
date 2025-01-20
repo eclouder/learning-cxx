@@ -10,6 +10,10 @@ struct Tensor4D {
     Tensor4D(unsigned int const shape_[4], T const *data_) {
         unsigned int size = 1;
         // TODO: 填入正确的 shape 并计算 size
+        for (unsigned int i = 0; i < 4; ++i) {
+            shape[i] = shape_[i];
+            size *= shape[i];
+        }
         data = new T[size];
         std::memcpy(data, data_, size * sizeof(T));
     }
@@ -27,7 +31,31 @@ struct Tensor4D {
     // 例如，`this` 形状为 `[1, 2, 3, 4]`，`others` 形状为 `[1, 2, 1, 4]`，
     // 则 `this` 与 `others` 相加时，3 个形状为 `[1, 2, 1, 4]` 的子张量各自与 `others` 对应项相加。
     Tensor4D &operator+=(Tensor4D const &others) {
-        // TODO: 实现单向广播的加法
+        bool is_bd[4]= {0, 0, 0, 0};;
+        for (int i = 0; i<4;++i){
+            if (shape[i] != others.shape[i]){
+                ASSERT(others.shape[i] == 1,"bd axis should be 1")
+                is_bd[i] = 1;
+            }
+        }
+        auto dst = this->data;
+        auto src = others.data;
+        T* marks[4]{src};
+        for (unsigned int a1=0;a1 < shape[0];++a1){
+            if (is_bd[0]){src = marks[0];}
+            marks[1] = src;
+            for (unsigned int a2  = 0;a2 <shape[1];++a2){
+                if (is_bd[1]){src = marks[1];}
+                marks[2] = src;
+                for (unsigned int a3  = 0;a3 <shape[2];++a3){
+                    if (is_bd[2]){src = marks[2];}
+                    marks[3] = src;
+                    for (unsigned int a4  = 0;a4 <shape[3];++a4){
+                        if (is_bd[3]){src = marks[3];}
+                        *dst++ += *src++;
+                }
+        }}}
+
         return *this;
     }
 };
